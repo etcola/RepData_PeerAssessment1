@@ -2,11 +2,43 @@
 
 
 ## Loading and preprocessing the data
-
+Read data in *.zip* format, and then convert it into a data table for program
+efficiency.
+```{r echo=TRUE}
+library(data.table)
+file <- unz("activity.zip", "activity.csv")
+data <- data.table(read.table(file, header=TRUE, sep=",", na.string="NA"))
+summary(data)
+class(data)
+```
 
 
 ## What is mean total number of steps taken per day?
 
+Calculate the sum of steps group by date, and store the result into *stepsum*.
+Notice that the *NA* values are removed in the *sum* function, so if the data is
+missing on a specific date, it will result in a *zero sum value*.
+```{r}
+stepsum <- data[, sum(steps, na.rm=TRUE), by=date]
+setnames(stepsum, c("date", "stepsum"))
+```
+
+We can get the histogram of the total number of steps taken each day as follows.
+```{r}
+hist(stepsum$stepsum, xlab="Total Number of Steps Taken Each Day", 
+     main="Histogram of the Total Number of Steps Taken Each Day",
+     col="blue")
+```
+
+Mean:
+```{r}
+mean(stepsum$stepsum, na.rm=TRUE)
+```
+
+Median:
+```{r}
+median(stepsum$stepsum, na.rm=TRUE)
+```
 
 
 ## What is the average daily activity pattern?
