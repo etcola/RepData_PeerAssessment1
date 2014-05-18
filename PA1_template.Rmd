@@ -106,3 +106,26 @@ As we can see, after imputing missing values, the mean and median are higher
 than what were calculated before.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+First we need to manipulate the data a little bit.
+```{r}
+transformweekday <- function (datestring) {
+    if (weekdays(as.Date(datestring)) %in% c("Saturday", "Sunday")) {
+        factor("weekend")
+    } else {
+        factor("weekday")
+    }
+}
+data[, day := sapply(date, transformweekday)]
+```
+The step mean can be calculated by
+```{r}
+stepmeancategorical <-  data[, mean(steps, na.rm=TRUE), by=c("interval","day")]
+setnames(stepmeancategorical, c("interval", "day", "stepmean"))
+```
+Finally we get the following plot:
+```{r}
+library(lattice)
+xyplot(stepmean ~ interval | day, 
+       data=stepmeancategorical, 
+       type="l", layout=c(1, 2), ylab="Number of steps")
+```
