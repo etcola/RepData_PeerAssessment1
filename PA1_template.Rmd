@@ -16,6 +16,7 @@ class(data)
 ## What is mean total number of steps taken per day?
 
 Calculate the sum of steps group by date, and store the result into *stepsum*.
+
 Notice that the *NA* values are removed in the *sum* function, so if the data is
 missing on a specific date, it will result in a *zero sum value*.
 ```{r}
@@ -30,23 +31,78 @@ hist(stepsum$stepsum, xlab="Total Number of Steps Taken Each Day",
      col="blue")
 ```
 
-Mean:
+**Mean**:
 ```{r}
 mean(stepsum$stepsum, na.rm=TRUE)
 ```
 
-Median:
+**Median**:
 ```{r}
 median(stepsum$stepsum, na.rm=TRUE)
 ```
 
 
 ## What is the average daily activity pattern?
-
+The time series plot can be made by this:
+```{r}
+stepmean <- data[, mean(steps, na.rm=TRUE), by=interval]
+setnames(stepmean, c("interval", "stepmean"))
+plot(stepmean, type="l", ylab="Average Number of Steps Taken")
+```
+The interval that contains the maximum number of steps can be evaluated via:
+```{r}
+stepmean[sort(stepmean, decreasing=TRUE)][1, interval]
+```
 
 
 ## Imputing missing values
+The total number of missing values in the dataset is calculated by:
+```{r}
+data[, sum(is.na(steps))]
+```
+We are going to fill the NAs with the average steps taken within the interval,
+which has been calculated and stored in *stepmean*.
 
+First of all we will define a function for filling the NA steps.
+```{r}
+fillna <- function(steps, stepmean) {
+   if (!is.na(steps)) {
+       steps
+   } else {
+       stepmean
+   }
+}
+```
+Then we can use *mapply* function to toggle NAs in *steps*.
+```{r}
+data[, stepsfixed := mapply(fillna, steps, stepmean$stepmean)]
+```
+We can check number of NAs in *datafixed*.
+```{r}
+data[, sum(is.na(stepsfixed))]
+```
+It works.
 
+Now we are going to re-calculate the stepsum, and plot the new histogram, with
+new **mean** and **median** calculated as well.
+```{r}
+stepsumfixed <- data[, sum(stepsfixed, na.rm=TRUE), by=date]
+setnames(stepsumfixed, c("date", "stepsumfixed"))
+hist(stepsumfixed$stepsumfixed, xlab="Total Number of Steps Taken Each Day", 
+     main="Histogram of the Total Number of Steps Taken Each Day(NA Fixed)",
+     col="steelblue")
+```
+
+**Mean**:
+```{r}
+mean(stepsumfixed$stepsumfixed, na.rm=TRUE)
+```
+
+**Median**:
+```{r}
+median(stepsumfixed$stepsumfixed, na.rm=TRUE)
+```
+As we can see, after imputing missing values, the mean and median are higher 
+than what were calculated before.
 
 ## Are there differences in activity patterns between weekdays and weekends?
